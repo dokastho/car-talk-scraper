@@ -9,8 +9,6 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import subprocess
 
-START_PAGE = 0
-
 # Configure Selenium
 #
 # Pro-tip: remove the "headless" option and set a breakpoint.  A Chrome
@@ -38,28 +36,27 @@ driver = webdriver.Chrome(
 
 # start scraping
 
-link = "https://www.wnyc.org/shows/car-talk"
+LINK = "https://www.wnyc.org/shows/car-talk"
 
 ep_links = []
 
-if START_PAGE != 0:
-    link = f'{link}/{START_PAGE}'
+page_num = 0
 
-driver.get(link)
+while page_num < 50:
 
-while True:
+    link = f'{LINK}/{page_num}'
+    driver.get(link)
+
+    driver.implicitly_wait(3)
     links = driver.find_elements_by_xpath('//a[@data-test-selector="story-tease-title"]')
 
-    ep_links += [ln.get_attribute("href") for ln in links]
-    
-    try:
-        next = driver.find_element_by_xpath('//span[@class="pagefooter-next"]')
-        
-        if next is not None:
-            btn = next.find_element_by_xpath("//button")
-            btn.click()
-    except:
-        break
+    new_links = [ln.get_attribute("href") for ln in links]
+
+    [print(f'Get: {len(ep_links) + i} {ln}') for i, ln in enumerate(new_links)]
+
+    ep_links += new_links
+
+    page_num += 1
 
 with open("links.txt", "w") as fp:
     fp.writelines("\n".join(ep_links))
